@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [ -z "${AWS_ACCESS_KEY}" ]; then
+    echo "AWS_ACCESS_KEY is unset or set to the empty string"
+    exit
+fi
+if [ -z "${AWS_SECRET_KEY}" ]; then
+    echo "AWS_SECRET_KEY is unset or set to the empty string"
+    exit
+fi
+if [ -z "${EC2REGION}" ]; then
+    echo "EC2REGION is unset or set to the empty string"
+    exit
+fi
+
+if [ $# -lt 1 ] || [ $# -gt 3 ]; then
+    echo "Usage: ssh-ec2 <instance id>"
+else
+    case "$1" in
+        "-r")
+            if [ $# -eq 3 ] && [ -n "`echo $3 | egrep \"^i-[0-9a-z]+\"`" ]; then
+                ssh `ec2-describe-instances --region $EC2REGION | grep "^INSTANCE"| cut -f4`
+            else
+                echo "Usage: ssh-ec2 <instance id>"
+                exit 1
+            fi;;
+        i-[0-9a-zA-Z]*)
+            if [ $# -eq 3 ] && [ "$2" == "-r" ]; then
+                ssh `ec2-describe-instances --region $EC2REGION | grep "^INSTANCE"| cut -f4`
+            elif [ $# -eq 1 ]; then
+                ssh `ec2-describe-instances $1 | grep "^INSTANCE"| cut -f4`
+            else
+                echo "Usage: ssh-ec2 <instance id>"
+                exit 1
+            fi;;
+        *)
+            echo "Usage: ssh-ec2 <instance id>"
+        esac
+fi
+
+exit 0
